@@ -121,7 +121,14 @@ class DatabaseTokenRepository implements TokenRepositoryInterface {
 	 */
 	protected function reminderExpired($reminder)
 	{
-		$createdPlusHour = strtotime($reminder->created_at) + $this->expires;
+		if (isset($reminder->created_at)) 
+		{
+			$createdPlusHour = strtotime($reminder->created_at) + $this->expires;
+		} 
+		else 
+		{
+			$createdPlusHour = strtotime($reminder['created_at']['date']) + $this->expires;
+		}
 
 		return $createdPlusHour < $this->getCurrentTime();
 	}
