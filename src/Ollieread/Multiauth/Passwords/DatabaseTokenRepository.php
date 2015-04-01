@@ -104,34 +104,29 @@ class DatabaseTokenRepository implements TokenRepositoryInterface {
      * @param $type
      * @return bool
      */
-	public function exists(CanResetPasswordContract $user, $token, $type)
-	{
-		$email = $user->getEmailForPasswordReset();
+    public function exists(CanResetPasswordContract $user, $token, $type)
+    {
+        $email = $user->getEmailForPasswordReset();
 
-		$reminder = $this->getTable()->where('email', $email)->where('token', $token)->first();
+        $token = (array) $this->getTable()->where('email', $email)->where('token', $token)->first();
 
-		return $reminder && ! $this->reminderExpired($reminder);
-	}
+        return $token && ! $this->tokenExpired($token);
+    }
 
-	/**
-	 * Determine if the reminder has expired.
-	 *
-	 * @param  object  $reminder
-	 * @return bool
-	 */
-	protected function reminderExpired($reminder)
-	{
-		if (isset($reminder->created_at)) 
-		{
-			$createdPlusHour = strtotime($reminder->created_at) + $this->expires;
-		} 
-		else 
-		{
-			$createdPlusHour = strtotime($reminder['created_at']['date']) + $this->expires;
-		}
+    /**
+     * Determine if the token has expired.
+     *
+     * @param  array  $token
+     * @return bool
+     */
+    protected function tokenExpired($token)
+    {
+    	$timestamp = array_key_exists('date', $token['created_at']) ? $token['created_at']['date'] : $token['created_at'];
 
-		return $createdPlusHour < $this->getCurrentTime();
-	}
+        $createdPlusHour = strtotime($timestamp) + $this->expires;
+
+        return $createdPlusHour < $this->getCurrentTime();
+    }
 
 	/**
 	 * Get the current UNIX timestamp.
