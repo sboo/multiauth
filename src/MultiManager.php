@@ -15,6 +15,7 @@ class MultiManager
      * @var array
      */
     protected $providers = array();
+    protected $currentAuthUser = null;
 
     /**
      * @param \Illuminate\Foundation\Application $app
@@ -24,6 +25,7 @@ class MultiManager
         foreach ($app['config']['auth.multi'] as $key => $config) {
             $this->providers[$key] = new AuthManager($app, $key, $config);
         }
+        $this->currentAuthUser = session()->get('current_auth_user');
     }
 
     /**
@@ -37,4 +39,15 @@ class MultiManager
         }
     }
 
+    /**
+     * @param string $name
+     * @return \Illuminate\Auth\Guard|\Ollieread\Multiauth\Guard
+     */
+    public function current($name = null){
+        if(!is_null($name)){
+          session(['current_auth_user'=>$name]);
+          $this->currentAuthUser = session()->get('current_auth_user');
+        }
+        return $this->providers[$this->currentAuthUser];
+    }
 }

@@ -5,6 +5,7 @@ use Illuminate\Contracts\Auth\UserProvider;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Contracts\Auth\Authenticatable AS UserContract;
 
 /**
  * Class Guard
@@ -74,8 +75,23 @@ class Guard extends OriginalGuard
     public function impersonate($type, $id, $remember = false)
     {
         if ($this->check()) {
-            return Auth::$type()->loginUsingId($id, $remember);
+            Auth::$type()->loginUsingId($id, $remember);
+            return Auth::current($type);
         }
     }
 
+    /**
+     * Set the current user.
+     *
+     * @param  \Illuminate\Contracts\Auth\Authenticatable  $user
+     * @return void
+     */
+    public function setUser(UserContract $user)
+    {
+        $this->user = $user;
+
+        $this->loggedOut = false;
+
+        Auth::current($this->name);
+    }
 }
