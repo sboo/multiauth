@@ -50,4 +50,8 @@ class MultiManager
         }
         return $this->providers[$this->currentAuthUser];
     }
+
+    public function isImpersonated(){
+      return $this->providers[$this->currentAuthUser]->isImpersonated();
+    }
 }

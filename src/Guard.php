@@ -18,6 +18,7 @@ class Guard extends OriginalGuard
      * @var \Symfony\Component\HttpFoundation\Request
      */
     protected $name;
+    protected $impersonated = false;
 
     /**
      * @param \Illuminate\Contracts\Auth\UserProvider $provider
@@ -76,8 +77,19 @@ class Guard extends OriginalGuard
     {
         if ($this->check()) {
             Auth::$type()->loginUsingId($id, $remember);
+            $this->impersonated = true;
             return Auth::current($type);
         }
+    }
+
+    /**
+     * It is Impersonated
+     *
+     *
+     * @return bool
+     */
+    public function isImpersonated(){
+      return $this->impersonated;
     }
 
     /**
