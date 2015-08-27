@@ -19,6 +19,7 @@ class Guard extends OriginalGuard
      */
     protected $name;
     protected $impersonated = false;
+    protected $impersonator = null;
 
     /**
      * @param \Illuminate\Contracts\Auth\UserProvider $provider
@@ -54,6 +55,42 @@ class Guard extends OriginalGuard
     }
 
     /**
+     * Log the given user ID into the application.
+     *
+     * @param  mixed  $id
+     * @param  bool   $remember
+     * @return \Illuminate\Contracts\Auth\Authenticatable
+     */
+    public function loginUsingId($id, $remember = false, $impersonator = null)
+    {
+        $this->session->set($this->getName(), $id);
+
+        $this->login($user = $this->provider->retrieveById($id), $remember);
+
+        if(!is_null($impersonator)){
+          $this->impersonator = $impersonator;
+          $this->impersonated = true;
+        }
+
+        return $user;
+    }
+
+    /**
+     * Set the current user.
+     *
+     * @param  \Illuminate\Contracts\Auth\Authenticatable  $user
+     * @return void
+     */
+    public function setUser(UserContract $user)
+    {
+        $this->user = $user;
+
+        $this->loggedOut = false;
+
+        Auth::current($this->name);
+    }
+
+    /**
      * Get the authenticated user instance.
      *
      * @return \Illuminate\Contracts\Auth\Authenticatable|null
@@ -76,8 +113,7 @@ class Guard extends OriginalGuard
     public function impersonate($type, $id, $remember = false)
     {
         if ($this->check()) {
-            Auth::$type()->loginUsingId($id, $remember);
-            $this->impersonated = true;
+            Auth::$type()->loginUsingId($id, $remember,$this->name);
             return Auth::current($type);
         }
     }
@@ -93,17 +129,12 @@ class Guard extends OriginalGuard
     }
 
     /**
-     * Set the current user.
+     * Switch to impersonator user
      *
-     * @param  \Illuminate\Contracts\Auth\Authenticatable  $user
-     * @return void
+     * @return \Illuminate\Contracts\Auth\Authenticatable|null
      */
-    public function setUser(UserContract $user)
-    {
-        $this->user = $user;
 
-        $this->loggedOut = false;
-
-        Auth::current($this->name);
+    public function switchToImpersonator(){
+      return ($this->isImpersonated()) ? Auth::current($this->impersonator) : null;
     }
 }
